@@ -13,6 +13,7 @@ license:      "ISC"
 tags:         ["org:mirage"]
 
 build: [
+  [make "add-cap-files"]
   ["dune" "subst"] {pinned}
   ["dune" "build" "-x" "riscv" "-p" "functoria-runtime" "-j" jobs]
   # do not run the tests in parallel as it uses side-effects
