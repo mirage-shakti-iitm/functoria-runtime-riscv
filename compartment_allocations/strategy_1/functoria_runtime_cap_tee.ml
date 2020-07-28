@@ -15,5 +15,5 @@ camlFunctoria_runtime__term:15
 camlFunctoria_runtime__with_argv:15
 camlFunctoria_runtime__gather:15
 camlFunctoria_runtime_:255
-camlFunctoria_runtime__fun:15
+camlFunctoria_runtime__fun:254
 *)
