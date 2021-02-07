@@ -1,13 +1,11 @@
-.PHONY: build clean test add-cap-files
-
-add-cap-files:
-	./choose_compartment_strategy.sh $(COMPARTMENT_STRATEGY_CHOICE)
+.PHONY: build clean test
 
 build:
 	dune build
 
 test:
-	dune runtest
+	dune runtest && \
+	INSIDE_FUNCTORIA_TESTS=1 dune exec -- tests/test_full.exe
 
 clean:
 	dune clean

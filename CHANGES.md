@@ -1,3 +1,54 @@
+## v3.0.3 (2019-12-17)
+
+* Fix equality for `'a impl` values, which caused issue in `mirage configure`
+  when multiple keys share the same name (issue #187, fix #188 by @samoht)
+* App_info: avoid `opam list --rec` which uses the CUDF solver, instead do
+  fixpoint manually. Fixes reproducibility with `orb` (#189 @hannesm)
+
+## v3.0.2 (2019-11-03)
+
+* Remove custom opam version comparison code, instead collect min and max as
+  sets and output them all (#183, @hannesm fixes #143)
+  for `package ~min:"1.0" ~max:"2.0" "a" ; package ~min:"1.5" ~max:"2.0" "a"`,
+  the output is now `"a" {>= "1.0" & >= "1.5" & < "2.0"}`, it used to be
+  `"a" {>= "1.5" & < "2.0"}`.
+
+  The advantage of avoiding to parse version numbers is that it can't be
+  incompatible with how opam works (functoria's approach used to not support
+  "1.0~beta", "1.0-5", "v1.0"; and it used to handle "1.0" and "1.0.0"
+  differently than opam).
+
+## v3.0.1 (2019-10-21)
+
+* Use `dune` to compile `config.ml` into an executable and run it.
+  This replaces the use of `ocamlbuild` and dynlinking of `config.ml`
+  (#176, @samoht)
+  The new compilation scheme:
+  - generates `dune`, `dune.config` and `dune.build` with sensible
+    configuration values. Each file can be overwritten by the user,
+    in that case functoria will detect it and will not remove during
+    the clean step;
+  - by default, `dune` just includes `dune.config` and `dune.build`;
+  - by default, `dune.config` contains the rules to build `config.ml`
+    into `config.exe`;
+  - by default, `dune.build` is empty -- functoria users such as
+    `mirage` can just overwrite that file with the rigth build rules.
+* Invoke `opam list` with `--color=never` (#177, @ehmry)
+* Use different exit codes in `Functoria_runtime.with_argv` (#180, @hannesm)
+
+## v2.2.5 (2019-10-14)
+
+* Functoria_runtime.with_argv now uses (#179, by @hannesm)
+  - exit 63 when `Help or `Version is requested (used to exit with 0)
+  - exit 64 when Term.eval returns with an error (used to raise an exception)
+
+## v3.0.0 (2019-07-25)
+
+* use `dune` to build `config.ml` (@TheLortex, #167)
+* add the ability to use external libraries un `config.ml` via an optional
+  `dune.config` file (@TheLortex, #167)
+* Replace dynlink method by a 2-stage build (@TheLortex, #167)
+
 ## v2.2.4 (2019-05-27)
 
 * fix app_info - executing "opam list --installed" (#170, by @hannesm)

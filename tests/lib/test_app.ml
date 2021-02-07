@@ -30,13 +30,13 @@ let run cmd =
       failwith err
 
 let rec root path =
-  Bos.OS.File.exists Fpath.(path / "functoria.opam") >>= function
+  Bos.OS.File.exists Fpath.(path / "functoria-runtime.opam") >>= function
   | true  -> Ok path
   | false -> root (Fpath.parent path)
 
 let root () = R.get_ok @@ (Bos.OS.Dir.current () >>= root)
 
-let dune_file i = Fpath.(Functoria.Info.build_dir i / "dune")
+let dune_file i = Fpath.(Functoria.Info.build_dir i / "dune.build")
 
 let write_key i k f =
   let context = Functoria.Info.context i in
@@ -46,7 +46,7 @@ let write_key i k f =
 
 let split_root () =
   let cwd = R.get_ok @@ Bos.OS.Dir.current () in
-  let root = Fpath.(root () / "_build" / "default") in
+  let root = root () in
   match Fpath.relativize ~root cwd with
   | None      -> failwith "split root"
   | Some path -> root, path
@@ -57,10 +57,10 @@ module C = struct
                  let run x = x"
   let name = "test"
   let version = "1.0"
-  let packages = [Functoria.package "functoria"]
+  let packages = [Functoria.package "functoria"; Functoria.package "test_app"]
   let ignore_dirs = []
 
-  let create jobs = Functoria.impl @@ object
+  let create jobs = Functoria.impl @@ object (self)
       inherit Functoria.base_configurable
       method ty = Functoria.job
       method name = "test_app"
@@ -76,19 +76,22 @@ module C = struct
 
       method! configure i =
         let dune = Fmt.strf
-            "; An infortunate hack: bring stage 0 modules in scope of stage 1\n\
-             (rule (copy ../../runtime/functoria_runtime.ml functoria_runtime.ml))\n\
-             (rule (copy ../../runtime/functoria_info.ml functoria_info.ml))\n\
-             \n\
-             (executable\n\
+            "(executable\n\
             \   (name      %s)\n\
-            \   (libraries cmdliner fmt))\n"
+            \   (modules (:standard \\ config))\n\
+            \   (libraries cmdliner fmt functoria-runtime))\n"
             (output i)
         in
         Bos.OS.File.write (dune_file i) dune
 
       method! clean i =
-        Bos.OS.File.delete (dune_file i)
+        Bos.OS.File.delete (dune_file i) >>= fun () ->
+        Bos.OS.File.delete Fpath.(v @@ output i ^ ".exe") >>= fun () ->
+        List.fold_left (fun acc key ->
+            acc >>= fun () ->
+            let file = Fpath.v (Key.name key) in
+            Bos.OS.File.delete file
+          ) (Ok ()) self#keys
 
       method! build i =
         Bos.OS.Dir.with_current (Functoria.Info.build_dir i) (fun () ->
