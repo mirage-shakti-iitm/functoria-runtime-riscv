@@ -3,5 +3,5 @@
  (public_name functoria-runtime)
  (libraries bytes cmdliner fmt)
  (wrapped false)
- (ocamlopt_flags (-default-compartment-id 1 -function-sections))
+ (ocamlopt_flags (-default-compartment-id 255 -function-sections))
 )
